@@ -13,27 +13,29 @@ Wasselni is a carpooling platform inspired by BlaBlaCar, designed to connect dri
 - Database: PostgreSQL
 - Frontend: (to be defined)
 
-the Backend architecture:
+## Backend Architecture
+```text
 Wasselni
-├── prisma/                  # Database "Partition"
-│   ├── schema.prisma        
-│   └── migrations/          
+├── prisma/              # Database "Partition"
+│   ├── schema.prisma
+│   └── migrations/
 ├── src/
-│   ├── config/              # Environment variables & external service configs 
-│   ├── core/                # The "Kernel". Shared logic that runs everything.
-│   │   ├── middleware/      # Auth checks, logging, error handling
-│   │   ├── errors/          # Custom error classes (AppError, NotFound)
-│   │   └── utils/           # Helper functions (date formatting, calculation)
-│   ├── modules/             # FEATURE SLICES 
-│   │   ├── auth/            # Login, Signup, OTP
-│   │   ├── user/            # Profiles, Ratings, Preferences
-│   │   ├── ride/            # Ride CRUD, Waypoints
-│   │   ├── matching/        
-│   │   ├── geo/            
-│   │   └── payment/         
-│   ├── app.ts               # Express app setup 
-│   └── server.ts            # Entry point 
+│   ├── config/          # Environment variables & external service configs
+│   ├── core/            # The "Kernel": shared logic that runs everything
+│   │   ├── middleware/  # Auth checks, logging, error handling
+│   │   ├── errors/      # Custom error classes (AppError, NotFound)
+│   │   └── utils/       # Helper functions (date formatting, calculation)
+│   ├── modules/         # Feature slices
+│   │   ├── auth/        # Login, Signup, OTP
+│   │   ├── user/        # Profiles, Ratings, Preferences
+│   │   ├── ride/        # Ride CRUD, Waypoints
+│   │   ├── matching/
+│   │   ├── geo/
+│   │   └── payment/
+│   ├── app.ts           # Express app setup
+│   └── server.ts        # Entry point
 └── package.json
+```
 
 ## Team
 @Younes, @Ayoub, @Tedj, @Amjed, @Siraj
