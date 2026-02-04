@@ -1,0 +1,73 @@
+datasource db {
+    provider = "postgresql"
+}
+
+generator client {
+    provider = "prisma-client-js"
+    output   = "../generated/prisma"
+}
+
+enum Role {
+    PASSENGER
+    DRIVER
+}
+
+enum Gender {
+    MALE
+    FEMALE
+}
+
+enum Status {
+    PENDING
+    CONFIRMED
+    CANCELLED
+}
+
+model User {
+    id          Int       @id @default(autoincrement())
+    email       String    @unique
+    fullName    String
+    password    String
+    phone       String?   @unique
+    gender      Gender?
+    dateOfBirth DateTime?
+    bio         String?
+    avatar      String?   @default("https://zqsqxpnhcgkngfjrldkn.supabase.co/storage/v1/object/public/avatars/photo_2025-08-07_09-45-39.jpg")
+
+    role Role @default(PASSENGER)
+
+    // Verification
+    emailVerified Boolean @default(false)
+    phoneVerified Boolean @default(false)
+
+    // Relationships
+    ridesOffered Ride[] @relation("DriverRides")
+
+    bookings Booking[]
+
+    createdAt DateTime @default(now())
+    updatedAt DateTime @updatedAt
+}
+
+model Ride {
+    id          Int      @id @default(autoincrement())
+    driverId    Int
+    origin      String
+    destination String
+    departure   DateTime
+    price       Decimal
+    seats       Int
+
+    //relationships
+    driver   User      @relation("DriverRides", fields: [driverId], references: [id])
+    bookings Booking[]
+}
+
+model Booking {
+    id          Int    @id @default(autoincrement())
+    status      Status @default(PENDING)
+    passengerId Int
+    ride        Ride   @relation(fields: [rideId], references: [id])
+    rideId      Int
+    passenger   User   @relation(fields: [passengerId], references: [id])
+}
