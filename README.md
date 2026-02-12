@@ -1,6 +1,5 @@
 # Wasselni 🚗🇩🇿
 
-Wasselni is a carpooling platform inspired by BlaBlaCar, designed to connect drivers and passengers across Algeria for affordable and efficient travel.
 
 ## Features
 - User authentication
