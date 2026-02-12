@@ -1,4 +1,5 @@
 import express, { Application, Request, Response, NextFunction } from "express";
+import { errorHandler } from "./core/middleware/error.middleware.js";
 import cors from "cors";
 import dotenv from "dotenv";
 
@@ -20,6 +21,8 @@ app.use(express.urlencoded({ extended: true }));
 app.get("/api/health", (req: Request, res: Response) => {
     res.status(200).json({ message: "health check is running" });
 });
+
+app.use(errorHandler);
 
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
