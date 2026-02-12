@@ -14,15 +14,19 @@ export const authenticateToken = asyncHandler(
         }
 
         // Verify token
-        const decoded = jwt.verify(token, process.env.JWT_SECRET!);
-        if (typeof decoded != "object" || decoded === null) {
-            return res.status(403).json({ error: "Invalid token payload" });
+        try {
+            const decoded = jwt.verify(token, process.env.JWT_SECRET!);
+            if (typeof decoded != "object" || decoded === null) {
+                return res.status(403).json({ error: "Invalid token payload" });
+            }
+            const parsed = authPayloadSchema.safeParse(decoded);
+            if (!parsed.success) {
+                return res.status(403).json({ error: "Invalid token payload" });
+            }
+            req.userId = Number(parsed.data.sub);
+            return next();
+        } catch (err) {
+            return res.status(403).json({ error: "Token expired or invalid" });
         }
-
-        const parsed = authPayloadSchema.safeParse(decoded);
-        if (!parsed.success) {
-            return res.status(403).json({ error: "Invalid token payload" });
-        }
-        req.userId = Number(parsed.data.sub);
     },
 );
