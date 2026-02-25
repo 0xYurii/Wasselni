@@ -25,14 +25,15 @@ enum Status {
 
 model User {
     id          Int       @id @default(autoincrement())
+    googleId    String?
     email       String    @unique
     fullName    String
-    password    String
+    password    String?
     phone       String?   @unique
     gender      Gender?
     dateOfBirth DateTime?
     bio         String?
-    avatar      String?   @default("https://zqsqxpnhcgkngfjrldkn.supabase.co/storage/v1/object/public/avatars/photo_2025-08-07_09-45-39.jpg")
+    avatar      String?
 
     role Role @default(PASSENGER)
 
