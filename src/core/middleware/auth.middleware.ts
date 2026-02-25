@@ -24,6 +24,7 @@ export const authenticateToken = asyncHandler(
                 return res.status(403).json({ error: "Invalid token payload" });
             }
             req.userId = Number(parsed.data.sub);
+            req.userRole = parsed.data.role;
             return next();
         } catch (err) {
             return res.status(403).json({ error: "Token expired or invalid" });
