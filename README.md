@@ -36,5 +36,5 @@ Wasselni
 └── package.json
 ```
 
-## Team
-@Younes, @Ayoub, @Tedj, @Amjed, @Siraj
+## By
+[@Younes](https://github.com/0xYurii), [@Siraj](https://github.com/siradjbelmili),
