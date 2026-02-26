@@ -3,6 +3,7 @@ import { errorHandler } from "./core/middleware/error.middleware.js";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoute from "./modules/auth/route.js";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(
 );
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
 
 //health check route
 app.get("/api/health", (req: Request, res: Response) => {
