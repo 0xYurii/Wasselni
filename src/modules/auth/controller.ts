@@ -26,7 +26,7 @@ export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
     });
 
     if (!user) {
-        await prisma.user.create({
+        user = await prisma.user.create({
             data: {
                 email: payload.email,
                 fullName: payload.name || "Google User",
@@ -38,7 +38,7 @@ export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
     }
 
     const token = jwt.sign(
-        { sub: String(user?.id), role: user?.role },
+        { sub: String(user.id), role: user.role },
         process.env.JWT_SECRET!,
         {
             expiresIn: "1d",
@@ -53,7 +53,7 @@ export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
 
     return res.status(200).json({
         message: "Google Auth successful",
-        user: { id: user!.id, fullName: user!.fullName, email: user!.email },
+        user: { id: user.id, fullName: user.fullName, email: user.email },
     });
 });
 
