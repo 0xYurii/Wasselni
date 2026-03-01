@@ -5,9 +5,13 @@ import { authPayloadSchema } from "../validators/auth.validators.js";
 
 export const authenticateToken = asyncHandler(
     (req: Request, res: Response, next: NextFunction) => {
-        // Get token from Authorization header
+        // Accept JWT from either Authorization header or httpOnly cookie.
         const authHeader = req.headers["authorization"];
-        const token = authHeader && authHeader.split(" ")[1];
+        const bearerToken = authHeader?.startsWith("Bearer ")
+            ? authHeader.split(" ")[1]
+            : undefined;
+        const cookieToken = req.cookies?.jwt;
+        const token = bearerToken || cookieToken;
 
         if (!token) {
             return res.status(401).json({ error: "Access token required" });
