@@ -48,6 +48,7 @@ export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
+        path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -93,6 +94,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
+        path: "/",
         maxAge: 7 * 24 * 60 * 60 * 1000,
     });
 
@@ -140,10 +142,30 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
         { expiresIn: "1d" },
     );
 
+    res.cookie("jwt", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
+    });
+
     return res.status(201).json({
         message: "Signup successful",
         token,
         user: { id: user.id, fullName: user.fullName, email: user.email },
+    });
+});
+
+export const logout = asyncHandler(async (req: Request, res: Response) => {
+    res.clearCookie("jwt", {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        path: "/",
+    });
+    return res.status(200).json({
+        message: "Logout successful",
     });
 });
 
