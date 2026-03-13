@@ -1,5 +1,24 @@
 # Wasselni 🚗🇩🇿
 
+## Quick Start Guide
+
+
+
+#### 1. Install Dependencies
+```bash
+npm install
+```
+
+
+#### 2. Start Development Server
+```bash
+npm run dev
+```
+
+The server will start at `http://localhost:5000`
+
+
+### Project Structure
 
 ## Features
 - User authentication
