@@ -3,6 +3,7 @@ import { errorHandler } from "./core/middleware/error.middleware.js";
 import cors from "cors";
 import dotenv from "dotenv";
 import authRoute from "./modules/auth/route.js";
+import ridesRoute from "./modules/rides/route.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -28,6 +29,9 @@ app.get("/api/health", (req: Request, res: Response) => {
 
 //Auth route
 app.use("/auth", authRoute);
+
+//Rides route
+app.use("/api/rides", ridesRoute);
 
 app.use(errorHandler);
 
