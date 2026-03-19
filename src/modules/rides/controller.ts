@@ -36,6 +36,13 @@ export const myRides = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.userId;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
 
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user || user.role !== "DRIVER") {
+        return res
+            .status(403)
+            .json({ message: "Only drivers can create rides" });
+    }
+
     const rides = await prisma.ride.findMany({
         where: { driverId: userId },
         include: {
@@ -47,7 +54,7 @@ export const myRides = asyncHandler(async (req: Request, res: Response) => {
     return res.status(200).json({ message: "My Rides", rides });
 });
 
-export const deleteRide = asyncHandler(async (req: Request, res: Response) => {
+export const cancelRide = asyncHandler(async (req: Request, res: Response) => {
     const { id: rideId } = req.params;
     const userId = req.userId;
     if (!userId) return res.status(401).json({ message: "Unauthorized" });
@@ -72,9 +79,76 @@ export const deleteRide = asyncHandler(async (req: Request, res: Response) => {
             .status(403)
             .json({ message: "Not authorized to delete this ride" });
     }
-    await prisma.ride.delete({
+
+    await prisma.$transaction([
+        prisma.ride.update({
+            where: { id: parsedId },
+            data: { status: "CANCELLED" },
+        }),
+        prisma.booking.updateMany({
+            where: { rideId: parsedId, status: { not: "CANCELLED" } },
+            data: { status: "CANCELLED" },
+        }),
+    ]);
+
+    return res.status(200).json({ message: "Ride cancelled" });
+});
+
+export const searchRide = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    if (!user) {
+        return res.status(403).json({ message: "Invalide userId" });
+    }
+
+    const { origin, destination, departure, price, seats } = req.query;
+
+    const where: any = {
+        status: "ACTIVE",
+    };
+
+    if (origin) where.origin = { contains: origin, mode: "insensitive" };
+    if (destination)
+        where.destination = { contains: destination, mode: "insensitive" };
+    if (departure) where.departure = { gte: new Date(departure as string) };
+    if (seats) where.seats = { gte: Number(seats) };
+    if (price) where.price = { lte: Number(price) };
+
+    const rides = await prisma.ride.findMany({ where: where });
+
+    return res.status(200).json({ rides });
+});
+
+export const rideDetails = asyncHandler(async (req: Request, res: Response) => {
+    const { id: rideId } = req.params;
+    const userId = req.userId;
+    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!rideId || Array.isArray(rideId))
+        return res.status(400).json({ message: "Invalid rideId" });
+
+    const parsedId = parseInt(rideId, 10);
+    if (isNaN(parsedId)) {
+        return res.status(400).json({ message: "Invalid rideId format" });
+    }
+
+    const ride = await prisma.ride.findUnique({
         where: { id: parsedId },
+        include: {
+            driver: {
+                select: {
+                    fullName: true,
+                    avatar: true,
+                    phone: true,
+                    gender: true,
+                },
+            },
+        },
     });
 
-    return res.status(200).json({ message: "Ride deleted" });
+    if (!ride) {
+        return res.status(404).json({ message: "Invalid rideId" });
+    }
+    return res.status(200).json({ message: "Ride details", ride });
 });

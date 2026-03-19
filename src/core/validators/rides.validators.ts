@@ -7,3 +7,11 @@ export const createRideSchema = z.object({
     price: z.number().positive("Price must be positive"),
     seats: z.number().int().positive("Seats must be a positive integer"),
 });
+
+export const searchSchema = z.object({
+    origin: z.string().optional(),
+    destination: z.string().optional(),
+    departure: z.coerce.date().optional(),
+    seats: z.coerce.number().optional(),
+    price: z.coerce.number().optional(),
+});

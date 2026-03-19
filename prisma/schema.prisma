@@ -23,6 +23,13 @@ enum Status {
     CANCELLED
 }
 
+enum RideStatus {
+    ACTIVE
+    FULL
+    CANCELLED
+    COMPLETED
+}
+
 model User {
     id          Int       @id @default(autoincrement())
     googleId    String?
@@ -51,13 +58,14 @@ model User {
 }
 
 model Ride {
-    id          Int      @id @default(autoincrement())
+    id          Int        @id @default(autoincrement())
     driverId    Int
     origin      String
     destination String
     departure   DateTime
     price       Decimal
     seats       Int
+    status      RideStatus @default(ACTIVE)
 
     //relationships
     driver   User      @relation("DriverRides", fields: [driverId], references: [id])
