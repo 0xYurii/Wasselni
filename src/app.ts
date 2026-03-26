@@ -4,6 +4,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import authRoute from "./modules/auth/route.js";
 import ridesRoute from "./modules/rides/route.js";
+import bookingsRoute from "./modules/bookings/route.js";
 import cookieParser from "cookie-parser";
 
 dotenv.config();
@@ -32,6 +33,9 @@ app.use("/auth", authRoute);
 
 //Rides route
 app.use("/api/rides", ridesRoute);
+
+//Bookings route
+app.use("/api/bookings", bookingsRoute);
 
 app.use(errorHandler);
 

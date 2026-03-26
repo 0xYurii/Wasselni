@@ -28,6 +28,7 @@ enum RideStatus {
     FULL
     CANCELLED
     COMPLETED
+    IN_PROGRESS
 }
 
 model User {
