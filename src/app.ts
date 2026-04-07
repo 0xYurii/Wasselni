@@ -29,7 +29,7 @@ app.get("/api/health", (req: Request, res: Response) => {
 });
 
 //Auth route
-app.use("/auth", authRoute);
+app.use("/api/auth", authRoute);
 
 //Rides route
 app.use("/api/rides", ridesRoute);
