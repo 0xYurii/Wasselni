@@ -35,6 +35,6 @@ ridesRoute.post(
     createRide,
 );
 
-ridesRoute.post("/:id/cancel", authenticateToken, cancelRide);
+ridesRoute.patch("/:id/cancel", authenticateToken, cancelRide);
 
 export default ridesRoute;
