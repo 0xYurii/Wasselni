@@ -1,16 +1,15 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prisma.js";
 import { asyncHandler } from "../../core/utils/asyncHandler.js";
+import { AppError } from "../../core/errors/AppError.js";
 
 export const createRide = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.userId;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) throw AppError.unauthorized();
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.role !== "DRIVER") {
-        return res
-            .status(403)
-            .json({ message: "Only drivers can create rides" });
+        throw AppError.forbidden("Only drivers can create rides");
     }
 
     const { origin, destination, departure, price, seats } = req.body;
@@ -34,13 +33,11 @@ export const createRide = asyncHandler(async (req: Request, res: Response) => {
 
 export const myRides = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.userId;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) throw AppError.unauthorized();
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.role !== "DRIVER") {
-        return res
-            .status(403)
-            .json({ message: "Only drivers can create rides" });
+        throw AppError.forbidden("Only drivers can view their rides");
     }
 
     const rides = await prisma.ride.findMany({
@@ -57,13 +54,13 @@ export const myRides = asyncHandler(async (req: Request, res: Response) => {
 export const cancelRide = asyncHandler(async (req: Request, res: Response) => {
     const { id: rideId } = req.params;
     const userId = req.userId;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) throw AppError.unauthorized();
     if (!rideId || Array.isArray(rideId))
-        return res.status(400).json({ message: "Invalid rideId" });
+        throw AppError.badRequest("Invalid rideId");
 
     const parsedId = parseInt(rideId, 10);
     if (isNaN(parsedId)) {
-        return res.status(400).json({ message: "Invalid rideId format" });
+        throw AppError.badRequest("Invalid rideId format");
     }
 
     const ride = await prisma.ride.findUnique({
@@ -71,13 +68,11 @@ export const cancelRide = asyncHandler(async (req: Request, res: Response) => {
     });
 
     if (!ride) {
-        return res.status(404).json({ message: "Invalid rideId" });
+        throw AppError.notFound("Ride");
     }
 
     if (ride.driverId !== userId) {
-        return res
-            .status(403)
-            .json({ message: "Not authorized to delete this ride" });
+        throw AppError.forbidden("Not authorized to cancel this ride");
     }
 
     await prisma.$transaction([
@@ -96,11 +91,11 @@ export const cancelRide = asyncHandler(async (req: Request, res: Response) => {
 
 export const searchRide = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.userId;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) throw AppError.unauthorized();
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-        return res.status(403).json({ message: "Invalide userId" });
+        throw AppError.notFound("User");
     }
 
     const { origin, destination, departure, price, seats } = req.query;
@@ -124,14 +119,22 @@ export const searchRide = asyncHandler(async (req: Request, res: Response) => {
 export const rideDetails = asyncHandler(async (req: Request, res: Response) => {
     const { id: rideId } = req.params;
     const userId = req.userId;
-    if (!userId) return res.status(401).json({ message: "Unauthorized" });
+    if (!userId) throw AppError.unauthorized();
     if (!rideId || Array.isArray(rideId))
-        return res.status(400).json({ message: "Invalid rideId" });
+        throw AppError.badRequest("Invalid rideId");
 
     const parsedId = parseInt(rideId, 10);
     if (isNaN(parsedId)) {
-        return res.status(400).json({ message: "Invalid rideId format" });
+        throw AppError.badRequest("Invalid rideId format");
     }
+
+    const hasBooking = await prisma.booking.findFirst({
+        where: {
+            rideId: parsedId,
+            passengerId: userId,
+            status: "CONFIRMED",
+        },
+    });
 
     const ride = await prisma.ride.findUnique({
         where: { id: parsedId },
@@ -140,15 +143,15 @@ export const rideDetails = asyncHandler(async (req: Request, res: Response) => {
                 select: {
                     fullName: true,
                     avatar: true,
-                    phone: true,
                     gender: true,
+                    phone: hasBooking ? true : false,
                 },
             },
         },
     });
 
     if (!ride) {
-        return res.status(404).json({ message: "Invalid rideId" });
+        throw AppError.notFound("Ride");
     }
     return res.status(200).json({ message: "Ride details", ride });
 });

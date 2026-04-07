@@ -4,13 +4,14 @@ import { asyncHandler } from "../../core/utils/asyncHandler.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
+import { AppError } from "../../core/errors/AppError.js";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
     const { credential } = req.body;
     if (!credential) {
-        return res.status(400).json({ message: "Google token missing" });
+        throw AppError.badRequest("Google token missing");
     }
 
     const ticket = await googleClient.verifyIdToken({
@@ -19,7 +20,7 @@ export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
     });
 
     const payload = ticket.getPayload();
-    if (!payload?.email) throw new Error("Invalid Google Payload");
+    if (!payload?.email) throw AppError.badRequest("Invalid Google Payload");
 
     let user = await prisma.user.findUnique({
         where: { email: payload.email },
@@ -63,9 +64,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     const invalidCredentialsMessage = "Invalid email or password";
 
     if (!email || !password) {
-        return res
-            .status(400)
-            .json({ message: "Email and password are required" });
+        throw AppError.badRequest("Email and password are required");
     }
 
     const user = await prisma.user.findUnique({
@@ -73,13 +72,13 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
     });
 
     if (!user || !user.password) {
-        return res.status(400).json({ message: invalidCredentialsMessage });
+        throw AppError.badRequest(invalidCredentialsMessage);
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
 
     if (!isMatch) {
-        return res.status(400).json({ message: invalidCredentialsMessage });
+        throw AppError.badRequest(invalidCredentialsMessage);
     }
 
     const token = jwt.sign(
@@ -113,14 +112,12 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
     const { fullName, email, password } = req.body;
 
     if (!fullName || !email || !password) {
-        return res.status(400).json({
-            message: "Full name, email and password are required",
-        });
+        throw AppError.badRequest("Full name, email and password are required");
     }
 
     const existingUser = await prisma.user.findUnique({ where: { email } });
     if (existingUser) {
-        return res.status(400).json({ message: "Email already used" });
+        throw AppError.conflict("Email already used");
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -173,9 +170,7 @@ export const getCurrentUser = asyncHandler(
     async (req: Request, res: Response) => {
         const userId = req.userId;
         if (!userId) {
-            return res.status(401).json({
-                message: "Unauthorized",
-            });
+            throw AppError.unauthorized();
         }
         const user = await prisma.user.findUnique({
             where: { id: userId },
@@ -193,9 +188,7 @@ export const getCurrentUser = asyncHandler(
         });
 
         if (!user) {
-            return res.status(404).json({
-                message: "User not found",
-            });
+            throw AppError.notFound("User");
         }
 
         return res.status(200).json({
