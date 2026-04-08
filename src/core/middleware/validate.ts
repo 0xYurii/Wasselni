@@ -7,16 +7,15 @@ export const validate =
         try {
             const parsed = schema.parse(req[source]);
 
-            //replace data with the clean parsed data
-            req[source] = parsed;
+            if (source === "body") {
+                req.body = parsed;
+            } else {
+                Object.assign(req[source], parsed);
+            }
+
             next();
         } catch (err) {
             if (err instanceof ZodError) {
-                const wantsHtml = req.headers.accept?.includes("text/html");
-                if (wantsHtml) {
-                    return res.status(400).send(err.flatten().fieldErrors);
-                }
-
                 return res.status(400).json({
                     status: "fail",
                     error: err.flatten().fieldErrors,

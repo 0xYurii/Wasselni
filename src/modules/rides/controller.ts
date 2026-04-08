@@ -99,6 +99,7 @@ export const searchRide = asyncHandler(async (req: Request, res: Response) => {
     if (departure) where.departure = { gte: new Date(departure as string) };
     if (seats) where.seats = { gte: Number(seats) };
     if (price) where.price = { lte: Number(price) };
+    console.log("WHERE CLAUSE:", JSON.stringify(where));
 
     const rides = await prisma.ride.findMany({ where: where });
 
