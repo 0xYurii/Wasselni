@@ -7,10 +7,8 @@ export const createRide = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.userId;
     if (!userId) throw AppError.unauthorized();
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user || user.role !== "DRIVER") {
+    if (req.userRole !== "DRIVER")
         throw AppError.forbidden("Only drivers can create rides");
-    }
 
     const { origin, destination, departure, price, seats } = req.body;
 
@@ -35,10 +33,8 @@ export const myRides = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.userId;
     if (!userId) throw AppError.unauthorized();
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user || user.role !== "DRIVER") {
-        throw AppError.forbidden("Only drivers can view their rides");
-    }
+    if (req.userRole !== "DRIVER")
+        throw AppError.forbidden("Only drivers can create rides");
 
     const rides = await prisma.ride.findMany({
         where: { driverId: userId },
@@ -90,14 +86,6 @@ export const cancelRide = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const searchRide = asyncHandler(async (req: Request, res: Response) => {
-    const userId = req.userId;
-    if (!userId) throw AppError.unauthorized();
-
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-        throw AppError.notFound("User");
-    }
-
     const { origin, destination, departure, price, seats } = req.query;
 
     const where: any = {
