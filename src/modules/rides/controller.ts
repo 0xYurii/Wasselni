@@ -102,6 +102,7 @@ export const searchRide = asyncHandler(async (req: Request, res: Response) => {
 
     const where: any = {
         status: "ACTIVE",
+        departure: { gte: new Date() },
     };
 
     if (origin) where.origin = { contains: origin, mode: "insensitive" };

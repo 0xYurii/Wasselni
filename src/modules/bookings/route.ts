@@ -19,6 +19,6 @@ bookingsRoute.post(
     validate(createBookingSchema, "body"),
     createBooking,
 );
-bookingsRoute.patch("/:id", authenticateToken, cancelBooking);
+bookingsRoute.patch("/:id/cancel", authenticateToken, cancelBooking);
 
 export default bookingsRoute;

@@ -8,12 +8,9 @@ export const createBooking = asyncHandler(
         const userId = Number(req.userId);
         const rideId = parseInt(req.body.rideId, 10);
 
-        if (!userId || isNaN(userId))
-            return res.status(401).json({ message: "Unauthorized" });
+        if (!userId || isNaN(userId)) throw AppError.unauthorized();
         if (!rideId || isNaN(rideId))
-            return res
-                .status(400)
-                .json({ message: "rideId must be a valid number" });
+            throw AppError.badRequest("rideId must be a valid number");
 
         const booking = await prisma.$transaction(async (tx) => {
             const ride = await tx.ride.findUnique({
@@ -53,12 +50,10 @@ export const createBooking = asyncHandler(
                 throw AppError.badRequest(messages[ride.status]);
             }
 
-            // Check seat availability
             const availableSeats = ride.seats - ride._count.bookings;
             if (availableSeats <= 0)
                 throw AppError.badRequest("No available seats");
 
-            // Prevent double booking
             const existingBooking = await tx.booking.findFirst({
                 where: {
                     rideId,
@@ -70,7 +65,7 @@ export const createBooking = asyncHandler(
                 throw AppError.badRequest("You already booked this ride");
 
             const newBooking = await tx.booking.create({
-                data: { rideId, passengerId: userId },
+                data: { rideId, passengerId: userId, status: "CONFIRMED" },
                 include: {
                     ride: {
                         include: {
@@ -102,8 +97,7 @@ export const createBooking = asyncHandler(
 
 export const myBookings = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.userId;
-    if (!userId || isNaN(Number(userId)))
-        return res.status(401).json({ message: "Unauthorized" });
+    if (!userId || isNaN(Number(userId))) throw AppError.unauthorized();
 
     const bookings = await prisma.booking.findMany({
         where: { passengerId: userId },
@@ -124,17 +118,15 @@ export const myBookings = asyncHandler(async (req: Request, res: Response) => {
 
 export const bookingDetails = asyncHandler(
     async (req: Request, res: Response) => {
-        const { id: rideId } = req.params;
+        const { id: bookingId } = req.params;
         const userId = req.userId;
-        if (!userId) return res.status(401).json({ message: "Unauthorized" });
-        if (!rideId || Array.isArray(rideId))
-            return res.status(400).json({ message: "Invalid rideId" });
+        if (!userId) throw AppError.unauthorized();
+        if (!bookingId || Array.isArray(bookingId))
+            throw AppError.badRequest("Invalid bookingId");
 
-        const parsedId = parseInt(rideId, 10);
+        const parsedId = parseInt(bookingId, 10);
         if (isNaN(parsedId))
-            return res
-                .status(400)
-                .json({ message: "Booking id must be a valid number" });
+            throw AppError.badRequest("Booking id must be a valid number");
 
         const booking = await prisma.booking.findUnique({
             where: { id: parsedId },
@@ -152,10 +144,8 @@ export const bookingDetails = asyncHandler(
             },
         });
 
-        if (!booking)
-            return res.status(404).json({ message: "Booking not found" });
-        if (booking.passengerId !== userId)
-            return res.status(403).json({ message: "Unauthorized" });
+        if (!booking) throw AppError.notFound("Booking");
+        if (booking.passengerId !== userId) throw AppError.forbidden();
 
         return res.status(200).json({ message: "Booking details", booking });
     },
@@ -163,17 +153,15 @@ export const bookingDetails = asyncHandler(
 
 export const cancelBooking = asyncHandler(
     async (req: Request, res: Response) => {
-        const { id: rideId } = req.params;
+        const { id: bookingId } = req.params;
         const userId = req.userId;
-        if (!userId) return res.status(401).json({ message: "Unauthorized" });
-        if (!rideId || Array.isArray(rideId))
-            return res.status(400).json({ message: "Invalid rideId" });
+        if (!userId) throw AppError.unauthorized();
+        if (!bookingId || Array.isArray(bookingId))
+            throw AppError.badRequest("Invalid bookingId");
 
-        const parsedId = parseInt(rideId, 10);
+        const parsedId = parseInt(bookingId, 10);
         if (isNaN(parsedId))
-            return res
-                .status(400)
-                .json({ message: "Booking id must be a valid number" });
+            throw AppError.badRequest("Booking id must be a valid number");
 
         await prisma.$transaction(async (tx) => {
             const booking = await tx.booking.findUnique({
