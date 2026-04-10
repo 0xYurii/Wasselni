@@ -92,6 +92,8 @@ export const searchRide = asyncHandler(async (req: Request, res: Response) => {
         status: "ACTIVE",
         departure: { gte: new Date() },
     };
+    const page = Number(req.query.page) || 1;
+    const limit = Number(req.query.limit) || 20;
 
     if (origin) where.origin = { contains: origin, mode: "insensitive" };
     if (destination)
@@ -101,9 +103,32 @@ export const searchRide = asyncHandler(async (req: Request, res: Response) => {
     if (price) where.price = { lte: Number(price) };
     console.log("WHERE CLAUSE:", JSON.stringify(where));
 
-    const rides = await prisma.ride.findMany({ where: where });
+    const rides = await prisma.ride.findMany({
+        where,
+        include: {
+            driver: { select: { fullName: true, avatar: true } },
+            _count: {
+                select: {
+                    bookings: { where: { status: { not: "CONFIRMED" } } },
+                },
+            },
+        },
+        skip: (page - 1) * limit,
+        take: limit,
+        orderBy: { departure: "asc" },
+    });
 
-    return res.status(200).json({ rides });
+    const ridesWithAvailability = rides.map((ride) => ({
+        ...ride,
+        availableSeats: ride.seats - ride._count.bookings,
+    }));
+
+    return res.status(200).json({
+        message: "Search Results",
+        ridesWithAvailability,
+        page,
+        limit,
+    });
 });
 
 export const rideDetails = asyncHandler(async (req: Request, res: Response) => {
@@ -135,6 +160,12 @@ export const rideDetails = asyncHandler(async (req: Request, res: Response) => {
                     avatar: true,
                     gender: true,
                     phone: hasBooking ? true : false,
+                    // rating:true,
+                },
+            },
+            _count: {
+                select: {
+                    bookings: { where: { status: { not: "CANCELLED" } } },
                 },
             },
         },
@@ -143,5 +174,12 @@ export const rideDetails = asyncHandler(async (req: Request, res: Response) => {
     if (!ride) {
         throw AppError.notFound("Ride");
     }
-    return res.status(200).json({ message: "Ride details", ride });
+
+    return res.status(200).json({
+        message: "Ride details",
+        ride: {
+            ...ride,
+            availableSeats: ride.seats - ride._count.bookings,
+        },
+    });
 });
