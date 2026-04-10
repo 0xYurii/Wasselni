@@ -16,16 +16,11 @@ import {
 const ridesRoute = Router();
 
 // GET
-ridesRoute.get(
-    "/",
-    authenticateToken,
-    validate(searchSchema, "query"),
-    searchRide,
-);
+ridesRoute.get("/", validate(searchSchema, "query"), searchRide);
 
 ridesRoute.get("/created", authenticateToken, myRides);
 
-ridesRoute.get("/:id", authenticateToken, rideDetails);
+ridesRoute.get("/:id", rideDetails);
 
 // POST
 ridesRoute.post(
