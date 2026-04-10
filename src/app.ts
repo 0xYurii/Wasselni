@@ -27,6 +27,7 @@ const authLimiter = rateLimit({
 });
 
 // CORS & Helmet
+app.use(helmet());
 app.use(
     cors({
         origin: process.env.CLIENT_URL || "http://localhost:3000",
@@ -38,7 +39,6 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/api", limiter);
 app.use("/api/auth/login", authLimiter);
-app.use(helmet());
 
 //health check route
 app.get("/api/health", (req: Request, res: Response) => {

@@ -14,4 +14,6 @@ export const searchSchema = z.object({
     departure: z.coerce.date().optional(),
     seats: z.coerce.number().int().positive().optional(),
     price: z.coerce.number().nonnegative().optional(),
+    page: z.coerce.number().int().positive().default(1),
+    limit: z.coerce.number().int().positive().max(50).default(20),
 });

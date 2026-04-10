@@ -31,10 +31,9 @@ export const createRide = asyncHandler(async (req: Request, res: Response) => {
 
 export const myRides = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.userId;
-    if (!userId) throw AppError.unauthorized();
 
     if (req.userRole !== "DRIVER")
-        throw AppError.forbidden("Only drivers can create rides");
+        throw AppError.forbidden("Only drivers can view their rides");
 
     const rides = await prisma.ride.findMany({
         where: { driverId: userId },
@@ -50,7 +49,6 @@ export const myRides = asyncHandler(async (req: Request, res: Response) => {
 export const cancelRide = asyncHandler(async (req: Request, res: Response) => {
     const { id: rideId } = req.params;
     const userId = req.userId;
-    if (!userId) throw AppError.unauthorized();
     if (!rideId || Array.isArray(rideId))
         throw AppError.badRequest("Invalid rideId");
 
@@ -101,15 +99,13 @@ export const searchRide = asyncHandler(async (req: Request, res: Response) => {
     if (departure) where.departure = { gte: new Date(departure as string) };
     if (seats) where.seats = { gte: Number(seats) };
     if (price) where.price = { lte: Number(price) };
-    console.log("WHERE CLAUSE:", JSON.stringify(where));
-
     const rides = await prisma.ride.findMany({
         where,
         include: {
             driver: { select: { fullName: true, avatar: true } },
             _count: {
                 select: {
-                    bookings: { where: { status: { not: "CONFIRMED" } } },
+                    bookings: { where: { status: { not: "CANCELLED" } } },
                 },
             },
         },
@@ -134,7 +130,6 @@ export const searchRide = asyncHandler(async (req: Request, res: Response) => {
 export const rideDetails = asyncHandler(async (req: Request, res: Response) => {
     const { id: rideId } = req.params;
     const userId = req.userId;
-    if (!userId) throw AppError.unauthorized();
     if (!rideId || Array.isArray(rideId))
         throw AppError.badRequest("Invalid rideId");
 
