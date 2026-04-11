@@ -9,6 +9,7 @@ export const signupBodySchema = z.object({
     fullName: z.string().trim().min(2).max(100),
     email: z.string().trim().email(),
     password: z.string().trim().min(5).max(20),
+    role: z.enum(["DRIVER", "PASSENGER"]).default("PASSENGER"),
 });
 
 export const usernameParamSchema = z.object({

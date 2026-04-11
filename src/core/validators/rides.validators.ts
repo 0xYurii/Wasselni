@@ -6,6 +6,7 @@ export const createRideSchema = z.object({
     departure: z.string().datetime({ message: "Invalid departure datetime" }),
     price: z.number().positive("Price must be positive"),
     seats: z.number().int().positive("Seats must be a positive integer"),
+    description: z.string().max(500, "500 characters at max").optional(),
 });
 
 export const searchSchema = z.object({

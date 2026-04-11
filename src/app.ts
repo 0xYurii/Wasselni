@@ -5,6 +5,7 @@ import dotenv from "dotenv";
 import authRoute from "./modules/auth/route.js";
 import ridesRoute from "./modules/rides/route.js";
 import bookingsRoute from "./modules/bookings/route.js";
+import usersRoute from "./modules/users/route.js";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
@@ -50,6 +51,9 @@ app.use("/api/auth", authRoute);
 
 //Rides route
 app.use("/api/rides", ridesRoute);
+
+//Users route
+app.use("api/users", usersRoute);
 
 //Bookings route
 app.use("/api/bookings", bookingsRoute);

@@ -10,7 +10,8 @@ export const createRide = asyncHandler(async (req: Request, res: Response) => {
     if (req.userRole !== "DRIVER")
         throw AppError.forbidden("Only drivers can create rides");
 
-    const { origin, destination, departure, price, seats } = req.body;
+    const { origin, destination, departure, price, seats, description } =
+        req.body;
 
     const ride = await prisma.ride.create({
         data: {
@@ -20,6 +21,7 @@ export const createRide = asyncHandler(async (req: Request, res: Response) => {
             departure: new Date(departure),
             price,
             seats,
+            description,
         },
         include: {
             driver: { select: { id: true, fullName: true, avatar: true } },

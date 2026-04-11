@@ -66,6 +66,7 @@ model Ride {
     departure   DateTime
     price       Decimal
     seats       Int
+    description String?
     status      RideStatus @default(ACTIVE)
 
     //relationships
