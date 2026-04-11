@@ -8,6 +8,7 @@ export const createBooking = asyncHandler(
         const userId = Number(req.userId);
         const rideId = parseInt(req.body.rideId, 10);
 
+        if (!userId || isNaN(userId)) throw AppError.unauthorized();
         if (!rideId || isNaN(rideId))
             throw AppError.badRequest("rideId must be a valid number");
 
@@ -96,6 +97,7 @@ export const createBooking = asyncHandler(
 
 export const myBookings = asyncHandler(async (req: Request, res: Response) => {
     const userId = req.userId;
+    if (!userId || isNaN(Number(userId))) throw AppError.unauthorized();
 
     const bookings = await prisma.booking.findMany({
         where: { passengerId: userId },
@@ -118,6 +120,7 @@ export const bookingDetails = asyncHandler(
     async (req: Request, res: Response) => {
         const { id: bookingId } = req.params;
         const userId = req.userId;
+        if (!userId) throw AppError.unauthorized();
         if (!bookingId || Array.isArray(bookingId))
             throw AppError.badRequest("Invalid bookingId");
 
@@ -152,6 +155,7 @@ export const cancelBooking = asyncHandler(
     async (req: Request, res: Response) => {
         const { id: bookingId } = req.params;
         const userId = req.userId;
+        if (!userId) throw AppError.unauthorized();
         if (!bookingId || Array.isArray(bookingId))
             throw AppError.badRequest("Invalid bookingId");
 

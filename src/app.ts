@@ -53,7 +53,7 @@ app.use("/api/auth", authRoute);
 app.use("/api/rides", ridesRoute);
 
 //Users route
-app.use("api/users", usersRoute);
+app.use("/api/users", usersRoute);
 
 //Bookings route
 app.use("/api/bookings", bookingsRoute);

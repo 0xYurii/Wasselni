@@ -180,3 +180,59 @@ export const rideDetails = asyncHandler(async (req: Request, res: Response) => {
         },
     });
 });
+
+export const getRidePassengers = asyncHandler(
+    async (req: Request, res: Response) => {
+        const userId = req.userId;
+        const { id: rideId } = req.params;
+
+        if (!userId) throw AppError.unauthorized();
+
+        if (!rideId || Array.isArray(rideId))
+            throw AppError.badRequest("Invalid rideId");
+
+        const parsedId = parseInt(rideId, 10);
+        if (isNaN(parsedId)) {
+            throw AppError.badRequest("Invalid rideId format");
+        }
+
+        if (req.userRole !== "DRIVER")
+            throw AppError.forbidden("Only drivers can see their passengers");
+
+        const ride = await prisma.ride.findUnique({
+            where: { id: parsedId },
+            select: { driverId: true },
+        });
+
+        if (!ride) throw AppError.notFound("Ride");
+        if (ride.driverId !== userId)
+            throw AppError.forbidden("Only the ride's driver can view passengers");
+
+        const bookings = await prisma.booking.findMany({
+            where: {
+                rideId: parsedId,
+                status: { not: "CANCELLED" },
+            },
+            select: {
+                id: true,
+                passenger: {
+                    select: {
+                        id: true,
+                        fullName: true,
+                        avatar: true,
+                    },
+                },
+            },
+            orderBy: { createdAt: "asc" },
+        });
+
+        const passengers = bookings.map((booking) => ({
+            id: booking.passenger.id,
+            fullName: booking.passenger.fullName,
+            avatar: booking.passenger.avatar,
+            bookingId: booking.id,
+        }));
+
+        return res.status(200).json({ passengers });
+    },
+);

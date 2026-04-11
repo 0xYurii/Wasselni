@@ -19,3 +19,9 @@ export const usernameParamSchema = z.object({
         .max(10, "max length")
         .regex(/^[a-zA-Z0-9_.]+$/, "Alphanumeric only"),
 });
+
+export const createReviewSchema = z.object({
+    rideId: z.number().int().positive(),
+    rating: z.number().int().min(1).max(5),
+    comment: z.string().max(500).optional(),
+});
