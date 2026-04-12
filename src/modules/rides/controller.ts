@@ -186,8 +186,6 @@ export const getRidePassengers = asyncHandler(
         const userId = req.userId;
         const { id: rideId } = req.params;
 
-        if (!userId) throw AppError.unauthorized();
-
         if (!rideId || Array.isArray(rideId))
             throw AppError.badRequest("Invalid rideId");
 
@@ -206,7 +204,9 @@ export const getRidePassengers = asyncHandler(
 
         if (!ride) throw AppError.notFound("Ride");
         if (ride.driverId !== userId)
-            throw AppError.forbidden("Only the ride's driver can view passengers");
+            throw AppError.forbidden(
+                "Only the ride's driver can view passengers",
+            );
 
         const bookings = await prisma.booking.findMany({
             where: {
@@ -236,3 +236,57 @@ export const getRidePassengers = asyncHandler(
         return res.status(200).json({ passengers });
     },
 );
+
+export const updateRide = asyncHandler(async (req: Request, res: Response) => {
+    const userId = req.userId;
+    const { id: rideId } = req.params;
+    const { origin, destination, departure, price, seats, description } =
+        req.body;
+
+    if (!rideId || Array.isArray(rideId)) {
+        throw AppError.badRequest("Invalid rideId");
+    }
+
+    const parsedId = parseInt(rideId, 10);
+    if (isNaN(parsedId)) {
+        throw AppError.badRequest("Invalid rideId format");
+    }
+
+    if (req.userRole !== "DRIVER")
+        throw AppError.forbidden("Only drivers can update their rides");
+
+    const ride = await prisma.ride.findUnique({
+        where: { id: parsedId },
+        select: { driverId: true },
+    });
+
+    if (!ride) throw AppError.notFound("Ride");
+    if (ride.driverId !== userId) {
+        throw AppError.forbidden("You are not allowed to edite this ride");
+    }
+
+    const bookings = await prisma.booking.findMany({
+        where: {
+            rideId: parsedId,
+            status: "CONFIRMED",
+        },
+    });
+
+    if (bookings) {
+        throw AppError.forbidden("the ride has confirmed booking");
+    }
+
+    prisma.ride.update({
+        where: { id: parsedId },
+        data: {
+            origin,
+            destination,
+            departure,
+            price,
+            seats,
+            description,
+        },
+    });
+
+    res.json(200).json({ message: "Ride details updated" });
+});

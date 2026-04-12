@@ -9,6 +9,22 @@ export const createRideSchema = z.object({
     description: z.string().max(500, "500 characters at max").optional(),
 });
 
+export const updateRideSchema = z.object({
+    origin: z.string().trim().optional(),
+    destination: z.string().trim().optional(),
+    departure: z
+        .string()
+        .datetime({ message: "Invalid departure datetime" })
+        .optional(),
+    price: z.number().positive("Price must be positive").optional(),
+    seats: z
+        .number()
+        .int()
+        .positive("Seats must be a positive integer")
+        .optional(),
+    description: z.string().max(500, "500 characters at max").optional(),
+});
+
 export const searchSchema = z.object({
     origin: z.string().trim().optional(),
     destination: z.string().trim().optional(),
