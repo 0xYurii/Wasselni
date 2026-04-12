@@ -82,8 +82,6 @@ export const getUserReviews = asyncHandler(
             throw AppError.badRequest("Invalid rideId format");
         }
 
-        if (isNaN(parsedId)) throw AppError.badRequest("Invalid userId");
-
         const reviews = await prisma.review.findMany({
             where: { revieweeId: parsedId },
             include: {

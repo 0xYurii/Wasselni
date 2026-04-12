@@ -140,13 +140,15 @@ export const rideDetails = asyncHandler(async (req: Request, res: Response) => {
         throw AppError.badRequest("Invalid rideId format");
     }
 
-    const hasBooking = await prisma.booking.findFirst({
-        where: {
-            rideId: parsedId,
-            passengerId: userId,
-            status: "CONFIRMED",
-        },
-    });
+    const hasBooking = userId
+        ? await prisma.booking.findFirst({
+              where: {
+                  rideId: parsedId,
+                  passengerId: userId,
+                  status: "CONFIRMED",
+              },
+          })
+        : null;
 
     const ride = await prisma.ride.findUnique({
         where: { id: parsedId },
@@ -157,7 +159,6 @@ export const rideDetails = asyncHandler(async (req: Request, res: Response) => {
                     avatar: true,
                     gender: true,
                     phone: hasBooking ? true : false,
-                    // rating:true,
                 },
             },
             _count: {
@@ -272,21 +273,20 @@ export const updateRide = asyncHandler(async (req: Request, res: Response) => {
         },
     });
 
-    if (bookings) {
-        throw AppError.forbidden("the ride has confirmed booking");
-    }
+    if (bookings.length > 0)
+        throw AppError.forbidden("Cannot edit a ride with confirmed bookings");
 
-    prisma.ride.update({
+    const updated = await prisma.ride.update({
         where: { id: parsedId },
         data: {
             origin,
             destination,
-            departure,
+            departure: departure ? new Date(departure) : undefined,
             price,
             seats,
             description,
         },
     });
 
-    res.json(200).json({ message: "Ride details updated" });
+    return res.status(200).json({ message: "Ride updated", ride: updated });
 });

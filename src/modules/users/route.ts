@@ -19,8 +19,8 @@ usersRoute.get("/:id/reviews", getUserReviews);
 // POST
 usersRoute.post(
     "/reviews",
-    validate(createReviewSchema, "body"),
     authenticateToken,
+    validate(createReviewSchema, "body"),
     addReview,
 );
 
