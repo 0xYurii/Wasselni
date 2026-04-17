@@ -10,8 +10,8 @@ export const createRideSchema = z.object({
 });
 
 export const updateRideSchema = z.object({
-    origin: z.string().trim().optional(),
-    destination: z.string().trim().optional(),
+    origin: z.string().trim().min(1).optional(),
+    destination: z.string().trim().min(1).optional(),
     departure: z
         .string()
         .datetime({ message: "Invalid departure datetime" })

@@ -263,17 +263,17 @@ export const updateRide = asyncHandler(async (req: Request, res: Response) => {
 
     if (!ride) throw AppError.notFound("Ride");
     if (ride.driverId !== userId) {
-        throw AppError.forbidden("You are not allowed to edite this ride");
+        throw AppError.forbidden("Not authorized to edit this ride");
     }
 
-    const bookings = await prisma.booking.findMany({
+    const booking = await prisma.booking.findFirst({
         where: {
             rideId: parsedId,
             status: "CONFIRMED",
         },
+        select: { id: true },
     });
-
-    if (bookings.length > 0)
+    if (booking)
         throw AppError.forbidden("Cannot edit a ride with confirmed bookings");
 
     const updated = await prisma.ride.update({

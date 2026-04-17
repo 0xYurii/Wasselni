@@ -103,4 +103,6 @@ model Review {
     reviewee   User     @relation("ReviewsReceived", fields: [revieweeId], references: [id])
     ride       Ride     @relation(fields: [rideId], references: [id])
     createdAt  DateTime @default(now())
+
+    @@unique([rideId, reviewerId])
 }

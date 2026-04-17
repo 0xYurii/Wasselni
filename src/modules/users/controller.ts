@@ -76,11 +76,11 @@ export const getUserReviews = asyncHandler(
         const { id: userId } = req.params;
 
         if (!userId || Array.isArray(userId))
-            throw AppError.badRequest("Invalid rideId");
+            throw AppError.badRequest("Invalid userId");
 
         const parsedId = parseInt(userId, 10);
         if (isNaN(parsedId)) {
-            throw AppError.badRequest("Invalid rideId format");
+            throw AppError.badRequest("Invalid userId format");
         }
 
         const reviews = await prisma.review.findMany({
@@ -175,7 +175,13 @@ export const updateProfile = asyncHandler(
 
         return res.status(200).json({
             message: "Profile updated successfully",
-            user: updatedUser,
+            user: {
+                id: updatedUser.id,
+                fullName: updatedUser.fullName,
+                avatar: updatedUser.avatar,
+                email: updatedUser.email,
+                role: updatedUser.role,
+            },
         });
     },
 );
