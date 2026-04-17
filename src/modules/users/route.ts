@@ -4,9 +4,13 @@ import {
     addReview,
     getUserReviews,
     getMyReviews,
+    updateProfile,
 } from "./controller.js";
 import { authenticateToken } from "../../core/middleware/auth.middleware.js";
-import { createReviewSchema } from "../../core/validators/user.validators.js";
+import {
+    createReviewSchema,
+    updateProfileSchema,
+} from "../../core/validators/user.validators.js";
 import { validate } from "../../core/middleware/validate.js";
 
 const usersRoute = Router();
@@ -22,6 +26,12 @@ usersRoute.post(
     authenticateToken,
     validate(createReviewSchema, "body"),
     addReview,
+);
+usersRoute.patch(
+    "/me",
+    authenticateToken,
+    validate(updateProfileSchema, "body"),
+    updateProfile,
 );
 
 export default usersRoute;

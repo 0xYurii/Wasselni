@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import prisma from "../../config/prisma.js";
+import jwt from "jsonwebtoken";
 import { asyncHandler } from "../../core/utils/asyncHandler.js";
 import { AppError } from "../../core/errors/AppError.js";
 
@@ -139,6 +140,42 @@ export const getMyReviews = asyncHandler(
                 ? Math.round(averageRating * 10) / 10
                 : null,
             totalReviews: reviews.length,
+        });
+    },
+);
+
+export const updateProfile = asyncHandler(
+    async (req: Request, res: Response) => {
+        const userId = req.userId;
+
+        const { fullName, bio, phone, avatar, gender, role } = req.body;
+
+        const updatedUser = await prisma.user.update({
+            where: { id: Number(userId) },
+            data: { fullName, bio, phone, avatar, gender, role },
+        });
+
+        if (role && role !== req.userRole) {
+            const newToken = jwt.sign(
+                {
+                    sub: String(updatedUser.id),
+                    role: updatedUser.role,
+                },
+                process.env.JWT_SECRET!,
+                { expiresIn: "5d" },
+            );
+
+            res.cookie("jwt", newToken, {
+                httpOnly: true,
+                secure: process.env.NODE_ENV === "production",
+                sameSite: "lax",
+                maxAge: 7 * 24 * 60 * 60 * 1000,
+            });
+        }
+
+        return res.status(200).json({
+            message: "Profile updated successfully",
+            user: updatedUser,
         });
     },
 );
