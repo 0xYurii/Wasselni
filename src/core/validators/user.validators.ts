@@ -18,7 +18,8 @@ export const updateProfileSchema = z.object({
     phone: z
         .string()
         .length(10, "Phone number must be exactly 10 digits")
-        .regex(/^0[5-7]\d{8}$/, "Invalid Algerian phone number"),
+        .regex(/^0[5-7]\d{8}$/, "Invalid Algerian phone number")
+        .optional(),
     avatar: z.string().url().optional(),
     gender: z.enum(["MALE", "FEMALE"]).optional(),
     role: z.enum(["PASSENGER", "DRIVER"]).optional(),
