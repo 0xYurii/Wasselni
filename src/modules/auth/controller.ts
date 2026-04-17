@@ -60,15 +60,15 @@ export const googleAuth = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const login = asyncHandler(async (req: Request, res: Response) => {
-    const { email, password } = req.body;
-    const invalidCredentialsMessage = "Invalid email or password";
+    const { phone, password } = req.body;
+    const invalidCredentialsMessage = "Invalid phone or password";
 
-    if (!email || !password) {
-        throw AppError.badRequest("Email and password are required");
+    if (!phone || !password) {
+        throw AppError.badRequest("Phone and password are required");
     }
 
     const user = await prisma.user.findUnique({
-        where: { email },
+        where: { phone },
     });
 
     if (!user || !user.password) {
@@ -102,40 +102,35 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
         user: {
             id: user.id,
             fullName: user.fullName,
-            email: user.email,
+            phone: user.phone,
             role: user.role,
         },
     });
 });
 
 export const signup = asyncHandler(async (req: Request, res: Response) => {
-    const { fullName, email, password, role } = req.body;
+    const { fullName, email, password, role, phone } = req.body;
 
-    if (!fullName || !email || !password) {
-        throw AppError.badRequest("Full name, email and password are required");
+    if (!fullName || !email || !password || !phone) {
+        throw AppError.badRequest(
+            "Full name, email, phone and password are required",
+        );
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email } });
-    if (existingUser) {
-        throw AppError.conflict("Email already used");
-    }
+    const existingEmail = await prisma.user.findUnique({ where: { email } });
+    if (existingEmail) throw AppError.conflict("Email already used");
+
+    const existingPhone = await prisma.user.findUnique({ where: { phone } });
+    if (existingPhone) throw AppError.conflict("Phone number already used");
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-        data: {
-            fullName,
-            email,
-            password: hashedPassword,
-            role,
-        },
+        data: { fullName, email, password: hashedPassword, role, phone },
     });
 
     const token = jwt.sign(
-        {
-            sub: String(user.id),
-            role: user.role,
-        },
+        { sub: String(user.id), role: user.role },
         process.env.JWT_SECRET!,
         { expiresIn: "5d" },
     );
@@ -150,10 +145,10 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
 
     return res.status(201).json({
         message: "Signup successful",
-        token,
         user: {
             id: user.id,
             fullName: user.fullName,
+            phone: user.phone,
             email: user.email,
             role: user.role,
         },

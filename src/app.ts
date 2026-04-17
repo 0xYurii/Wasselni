@@ -6,6 +6,7 @@ import authRoute from "./modules/auth/route.js";
 import ridesRoute from "./modules/rides/route.js";
 import bookingsRoute from "./modules/bookings/route.js";
 import usersRoute from "./modules/users/route.js";
+import otpRoute from "./modules/otp/route.js";
 import cookieParser from "cookie-parser";
 import rateLimit from "express-rate-limit";
 import helmet from "helmet";
@@ -26,6 +27,11 @@ const authLimiter = rateLimit({
     max: 10,
     message: { success: false, message: "Too many login attempts" },
 });
+const otpLimiter = rateLimit({
+    windowMs: 10 * 60 * 1000,
+    max: 3,
+    message: { success: false, message: "Too many OTP requests" },
+});
 
 // CORS & Helmet
 app.use(helmet());
@@ -40,6 +46,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use("/api", limiter);
 app.use("/api/auth/login", authLimiter);
+app.use("/api/auth/signup", authLimiter);
+app.use("/api/otp/send", otpLimiter);
 
 //health check route
 app.get("/api/health", (req: Request, res: Response) => {
@@ -57,6 +65,9 @@ app.use("/api/users", usersRoute);
 
 //Bookings route
 app.use("/api/bookings", bookingsRoute);
+
+//Otp route
+app.use("/api/otp", otpRoute);
 
 app.use(errorHandler);
 

@@ -1,13 +1,20 @@
 import { z } from "zod";
 
 export const loginBodySchema = z.object({
-    email: z.string().trim().email(),
+    phone: z
+        .string()
+        .length(10, "Phone number must be exactly 10 digits")
+        .regex(/^0[5-7]\d{8}$/, "Invalid Algerian phone number"),
     password: z.string().trim().min(5).max(20),
 });
 
 export const signupBodySchema = z.object({
     fullName: z.string().trim().min(2).max(100),
     email: z.string().trim().email(),
+    phone: z
+        .string()
+        .length(10, "Phone number must be exactly 10 digits")
+        .regex(/^0[5-7]\d{8}$/, "Invalid Algerian phone number"),
     password: z.string().trim().min(5).max(20),
     role: z.enum(["DRIVER", "PASSENGER"]).default("PASSENGER"),
 });
@@ -37,4 +44,11 @@ export const createReviewSchema = z.object({
     rideId: z.number().int().positive(),
     rating: z.number().int().min(1).max(5),
     comment: z.string().max(500).optional(),
+});
+
+export const phoneBodySchema = z.object({
+    phone: z
+        .string()
+        .length(10, "Phone number must be exactly 10 digits")
+        .regex(/^0[5-7]\d{8}$/, "Invalid Algerian phone number"),
 });
