@@ -109,7 +109,7 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 });
 
 export const signup = asyncHandler(async (req: Request, res: Response) => {
-    const { fullName, email, password } = req.body;
+    const { fullName, email, password, role } = req.body;
 
     if (!fullName || !email || !password) {
         throw AppError.badRequest("Full name, email and password are required");
@@ -127,6 +127,7 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
             fullName,
             email,
             password: hashedPassword,
+            role,
         },
     });
 
@@ -136,7 +137,7 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
             role: user.role,
         },
         process.env.JWT_SECRET!,
-        { expiresIn: "1d" },
+        { expiresIn: "5d" },
     );
 
     res.cookie("jwt", token, {
@@ -150,7 +151,12 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
     return res.status(201).json({
         message: "Signup successful",
         token,
-        user: { id: user.id, fullName: user.fullName, email: user.email },
+        user: {
+            id: user.id,
+            fullName: user.fullName,
+            email: user.email,
+            role: user.role,
+        },
     });
 });
 

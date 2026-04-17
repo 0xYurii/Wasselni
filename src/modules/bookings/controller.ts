@@ -8,6 +8,7 @@ export const createBooking = asyncHandler(
         const userId = Number(req.userId);
         const rideId = parseInt(req.body.rideId, 10);
 
+        if (!userId || isNaN(userId)) throw AppError.unauthorized();
         if (!rideId || isNaN(rideId))
             throw AppError.badRequest("rideId must be a valid number");
 
@@ -180,7 +181,6 @@ export const cancelBooking = asyncHandler(
                 data: { status: "CANCELLED" },
             });
 
-            //if ride was FULL set back to ACTIVE
             if (booking.ride.status === "FULL") {
                 await tx.ride.update({
                     where: { id: booking.rideId },

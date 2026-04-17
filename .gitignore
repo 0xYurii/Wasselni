@@ -51,7 +51,7 @@
 
 **/*.tsbuildinfo
 **/.eslintcache
-**/.env.*
+**/.env.
 **/.npmrc
 
 progres.md
