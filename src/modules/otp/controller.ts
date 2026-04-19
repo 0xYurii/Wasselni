@@ -5,6 +5,26 @@ import { AppError } from "../../core/errors/AppError.js";
 import { generateOTP } from "../../core/utils/generateOTP.js";
 
 const otpStore = new Map<string, { otp: string; expiresAt: number }>();
+const verifiedPhones = new Map<string, number>();
+const VERIFIED_PHONE_TTL_MS = 10 * 60 * 1000;
+
+export const checkPhoneVerified = (phone: string): boolean => {
+    const expiresAt = verifiedPhones.get(phone);
+    if (!expiresAt) {
+        return false;
+    }
+
+    if (Date.now() > expiresAt) {
+        verifiedPhones.delete(phone);
+        return false;
+    }
+
+    return true;
+};
+
+export const consumeVerifiedPhone = (phone: string): void => {
+    verifiedPhones.delete(phone);
+};
 
 export const send = asyncHandler(async (req: Request, res: Response) => {
     const { phone } = req.body;
@@ -60,6 +80,16 @@ export const verify = asyncHandler(async (req: Request, res: Response) => {
     if (record.otp !== otp) throw AppError.badRequest("Invalid OTP");
 
     otpStore.delete(phone);
+    const verifiedUntil = Date.now() + VERIFIED_PHONE_TTL_MS;
+    verifiedPhones.set(phone, verifiedUntil);
+
+    setTimeout(() => {
+        const expiresAt = verifiedPhones.get(phone);
+        if (expiresAt && expiresAt <= Date.now()) {
+            verifiedPhones.delete(phone);
+        }
+    }, VERIFIED_PHONE_TTL_MS);
+
     return res
         .status(200)
         .json({ success: true, message: "Phone number verified!" });

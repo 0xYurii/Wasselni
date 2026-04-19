@@ -5,6 +5,10 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 import { AppError } from "../../core/errors/AppError.js";
+import {
+    checkPhoneVerified,
+    consumeVerifiedPhone,
+} from "../otp/controller.js";
 
 const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
@@ -110,14 +114,21 @@ export const login = asyncHandler(async (req: Request, res: Response) => {
 
 export const signup = asyncHandler(async (req: Request, res: Response) => {
     const { fullName, email, password, role, phone } = req.body;
+    const resolvedEmail = (email || `${phone}@wasselni.local`).trim();
 
-    if (!fullName || !email || !password || !phone) {
+    if (!fullName || !password || !phone) {
+        throw AppError.badRequest("Full name, phone and password are required");
+    }
+
+    if (!checkPhoneVerified(phone)) {
         throw AppError.badRequest(
-            "Full name, email, phone and password are required",
+            "Phone number not verified. Please complete OTP verification first.",
         );
     }
 
-    const existingEmail = await prisma.user.findUnique({ where: { email } });
+    const existingEmail = await prisma.user.findUnique({
+        where: { email: resolvedEmail },
+    });
     if (existingEmail) throw AppError.conflict("Email already used");
 
     const existingPhone = await prisma.user.findUnique({ where: { phone } });
@@ -126,8 +137,16 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const user = await prisma.user.create({
-        data: { fullName, email, password: hashedPassword, role, phone },
+        data: {
+            fullName,
+            email: resolvedEmail,
+            password: hashedPassword,
+            role,
+            phone,
+        },
     });
+
+    consumeVerifiedPhone(phone);
 
     const token = jwt.sign(
         { sub: String(user.id), role: user.role },

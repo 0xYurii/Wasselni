@@ -10,7 +10,6 @@ export const loginBodySchema = z.object({
 
 export const signupBodySchema = z.object({
     fullName: z.string().trim().min(2).max(100),
-    email: z.string().trim().email(),
     phone: z
         .string()
         .length(10, "Phone number must be exactly 10 digits")
@@ -51,4 +50,5 @@ export const phoneBodySchema = z.object({
         .string()
         .length(10, "Phone number must be exactly 10 digits")
         .regex(/^0[5-7]\d{8}$/, "Invalid Algerian phone number"),
+    otp: z.string().trim().optional(),
 });
