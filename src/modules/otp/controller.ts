@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import axios from "axios";
+import { Vonage } from "@vonage/server-sdk";
 import { asyncHandler } from "../../core/utils/asyncHandler.js";
 import { AppError } from "../../core/errors/AppError.js";
 import { generateOTP } from "../../core/utils/generateOTP.js";
@@ -7,6 +8,11 @@ import { generateOTP } from "../../core/utils/generateOTP.js";
 const otpStore = new Map<string, { otp: string; expiresAt: number }>();
 const verifiedPhones = new Map<string, number>();
 const VERIFIED_PHONE_TTL_MS = 10 * 60 * 1000;
+
+const vonage = new Vonage({
+    apiKey: process.env.VONAGE_API_KEY!,
+    apiSecret: process.env.VONAGE_API_SECRET!,
+});
 
 export const checkPhoneVerified = (phone: string): boolean => {
     const expiresAt = verifiedPhones.get(phone);
@@ -37,22 +43,11 @@ export const send = asyncHandler(async (req: Request, res: Response) => {
     const expiresAt = Date.now() + 5 * 60 * 1000; // 5 min
 
     try {
-        await axios.post(
-            "https://restapi.easysendsms.app/v1/rest/sms/send",
-            {
-                from: process.env.SENDER_NAME,
-                to: normalizedPhone,
-                text: `Your verification code is: ${otp}. It expires in 5 minutes.`,
-                type: "0",
-            },
-            {
-                headers: {
-                    apikey: process.env.EASYSENDSMS_API_KEY,
-                    "Content-Type": "application/json",
-                    Accept: "application/json",
-                },
-            },
-        );
+        await vonage.sms.send({
+            to: normalizedPhone,
+            from: "Wasselni",
+            text: `Your verification code is: ${otp}. It expires in 5 minutes.`,
+        });
 
         otpStore.set(phone, { otp, expiresAt });
 

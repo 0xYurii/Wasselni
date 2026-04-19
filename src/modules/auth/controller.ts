@@ -143,6 +143,7 @@ export const signup = asyncHandler(async (req: Request, res: Response) => {
             password: hashedPassword,
             role,
             phone,
+            phoneVerified: true,
         },
     });
 
