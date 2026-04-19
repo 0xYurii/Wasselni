@@ -29,6 +29,9 @@ export const consumeVerifiedPhone = (phone: string): void => {
 export const send = asyncHandler(async (req: Request, res: Response) => {
     const { phone } = req.body;
     if (!phone) throw AppError.badRequest("Phone number is required");
+    const normalizedPhone = phone.startsWith("0")
+        ? `+213${phone.slice(1)}`
+        : phone;
 
     const otp = generateOTP();
     const expiresAt = Date.now() + 5 * 60 * 1000; // 5 min
@@ -38,7 +41,7 @@ export const send = asyncHandler(async (req: Request, res: Response) => {
             "https://restapi.easysendsms.app/v1/rest/sms/send",
             {
                 from: process.env.SENDER_NAME,
-                to: phone,
+                to: normalizedPhone,
                 text: `Your verification code is: ${otp}. It expires in 5 minutes.`,
                 type: "0",
             },
