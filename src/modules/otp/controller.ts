@@ -35,30 +35,28 @@ export const consumeVerifiedPhone = (phone: string): void => {
 export const send = asyncHandler(async (req: Request, res: Response) => {
     const { phone } = req.body;
     if (!phone) throw AppError.badRequest("Phone number is required");
+
     const normalizedPhone = phone.startsWith("0")
         ? `+213${phone.slice(1)}`
         : phone;
 
     const otp = generateOTP();
-    const expiresAt = Date.now() + 5 * 60 * 1000; // 5 min
+    const expiresAt = Date.now() + 5 * 60 * 1000;
 
-    try {
-        await vonage.sms.send({
-            to: normalizedPhone,
-            from: "Wasselni",
-            text: `Your verification code is: ${otp}. It expires in 5 minutes.`,
-        });
-
+    if (process.env.NODE_ENV !== "production") {
         otpStore.set(phone, { otp, expiresAt });
+        console.log(`[DEV OTP] Phone: ${normalizedPhone} → Code: ${otp}`);
+        return res.status(200).json({
+            success: true,
+            message: "OTP sent successfully",
+            dev_otp: otp,
+        });
+    }
 
-        return res
-            .status(200)
-            .json({ success: true, message: "OTP sent successfully" });
+    // PRODUCTION
+    try {
     } catch (error: any) {
-        console.error(
-            "EasySendSMS Error:",
-            error.response?.data || error.message,
-        );
+        console.error("SMS Error:", error.response?.data || error.message);
         throw AppError.internal("Failed to send OTP");
     }
 });
